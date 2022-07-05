@@ -242,6 +242,7 @@ export default function Map() {
 
   // handle backspace key
   useKeypress("Backspace", () => {
+    if (routes.length < 1) return;
     map.current.removeLayer(`point-${routes.length}`);
     map.current.removeSource(`point-${routes.length}`);
 

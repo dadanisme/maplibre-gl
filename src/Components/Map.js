@@ -14,7 +14,7 @@ export default function Map() {
   const [lng] = useState(107.59181517109367);
   const [lat] = useState(-6.862748883983936);
   const [zoom] = useState(15);
-  const [API_KEY] = useState("Nxj6l8KzvfU1L2uBVBZs");
+  const [API_KEY] = useState(process.env.REACT_APP_MAPTILER_API_KEY);
 
   // states
   const [routes, setRoutes] = useState([]);

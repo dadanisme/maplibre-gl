@@ -1,0 +1,15 @@
+.result-box {
+  position: absolute;
+  top: 0;
+  right: 0;
+  box-sizing: border-box;
+  background-color: #fff;
+  width: 300px;
+  padding-left: 20px;
+  z-index: 99;
+  word-wrap: break-word;
+}
+
+.result-box ol li {
+  padding-left: 0;
+}

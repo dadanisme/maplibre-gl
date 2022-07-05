@@ -1,0 +1,22 @@
+.map-wrap {
+  position: relative;
+  width: 100%;
+  height: calc(
+    100vh - 77px
+  ); /* calculate height of the screen minus the heading */
+}
+
+.map {
+  position: absolute;
+  width: calc(100% - 300px);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.map:hover {
+  cursor: pointer;
+}
+
+.maplibregl-marker {
+  opacity: 0;
+}

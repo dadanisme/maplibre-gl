@@ -13,3 +13,9 @@
 .result-box ol li {
   padding-left: 0;
 }
+
+@media (max-width: 768px) {
+  .result-box {
+    display: none;
+  }
+}

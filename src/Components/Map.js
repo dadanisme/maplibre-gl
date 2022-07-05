@@ -106,7 +106,6 @@ export default function Map() {
 
   // construct route from coordinates
   useEffect(() => {
-    console.log(routes);
     if (map.current.getSource("route") === undefined) {
       if (routes.length < 2) return;
       map.current.addSource("route", {

@@ -18,7 +18,9 @@ export default function Map() {
 
   // states
   const [routes, setRoutes] = useState([]);
+  const [markers, setMarkers] = useState([]);
 
+  // initialize map
   useEffect(() => {
     if (map.current) return;
     map.current = new maplibregl.Map({
@@ -27,6 +29,8 @@ export default function Map() {
       center: [lng, lat],
       zoom: zoom,
     });
+
+    // handle map click
     map.current.on("click", (e) => {
       const pointLngLat = [e.lngLat.lng, e.lngLat.lat];
 
@@ -40,6 +44,7 @@ export default function Map() {
           updatePolygon(tempRoutes);
         }
 
+        // create marker
         if (map.current.getLayer("point-" + id) === undefined) {
           map.current.addLayer({
             id: `point-${id}`,
@@ -67,43 +72,26 @@ export default function Map() {
             .setLngLat(pointLngLat)
             .addTo(map.current);
 
+          // add marker to markers
+          setMarkers((prevMarkers) => [...prevMarkers, marker]);
           marker.getElement().id = id;
-
-          // handle dragging
-          marker.on("drag", (e) => {
-            const markerElement = marker.getElement();
-            const id = markerElement.id;
-            const newPointLngLat = [e.target._lngLat.lng, e.target._lngLat.lat];
-            map.current.getSource("point-" + id).setData({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: newPointLngLat,
-              },
-            });
-            tempRoutes[id - 1].coordinates = newPointLngLat;
-            setRoutes(tempRoutes);
-
-            map.current.getSource("route").setData({
-              type: "Feature",
-              properties: {},
-              geometry: {
-                type: "LineString",
-                coordinates: tempRoutes.map((route) => route.coordinates),
-              },
-            });
-
-            if (map.current.getSource("polygon") !== undefined) {
-              // update polygon
-              updatePolygon(tempRoutes);
-            }
-          });
         }
-
         return tempRoutes;
       });
     });
   });
+
+  // update routes
+  const updateRoutes = (arr) => {
+    map.current.getSource("route").setData({
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: arr.map((route) => route.coordinates),
+      },
+    });
+  };
 
   // update polygon
   const updatePolygon = (arr) => {
@@ -161,7 +149,36 @@ export default function Map() {
     }
   }, [routes]);
 
-  // listen to keypress
+  // handle markers changes
+  useEffect(() => {
+    for (const marker of markers) {
+      // handle dragging
+      marker.on("drag", (e) => {
+        let tempRoutes = routes;
+        const markerElement = marker.getElement();
+        const id = markerElement.id;
+        const newPointLngLat = [e.target._lngLat.lng, e.target._lngLat.lat];
+        map.current.getSource("point-" + id).setData({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: newPointLngLat,
+          },
+        });
+        tempRoutes[id - 1].coordinates = newPointLngLat;
+        setRoutes(tempRoutes);
+
+        updateRoutes(tempRoutes);
+
+        if (map.current.getSource("polygon") !== undefined) {
+          // update polygon
+          updatePolygon(tempRoutes);
+        }
+      });
+    }
+  }, [markers, routes]);
+
+  // handle enter key
   useKeypress("Enter", () => {
     if (routes.length > 2) {
       if (map.current.getLayer("polygon") !== undefined) {
@@ -197,6 +214,7 @@ export default function Map() {
     }
   });
 
+  //handle delete key
   useKeypress("Delete", () => {
     if (routes.length > 2) {
       map.current.removeLayer("polygon");
@@ -204,16 +222,26 @@ export default function Map() {
     }
   });
 
+  // handle escape key
   useKeypress("Escape", () => {
     for (let i = 1; i <= routes.length; i++) {
       map.current.removeLayer(`point-${i}`);
       map.current.removeSource(`point-${i}`);
     }
-    map.current.removeLayer(`route`);
-    map.current.removeSource(`route`);
+
+    if (map.current.getLayer("route") !== undefined) {
+      map.current.removeLayer(`route`);
+      map.current.removeSource(`route`);
+    }
+
+    if (map.current.getLayer("polygon") !== undefined) {
+      map.current.removeLayer("polygon");
+      map.current.removeSource("polygon");
+    }
     setRoutes([]);
   });
 
+  // handle backspace key
   useKeypress("Backspace", () => {
     map.current.removeLayer(`point-${routes.length}`);
     map.current.removeSource(`point-${routes.length}`);
@@ -225,6 +253,7 @@ export default function Map() {
     }
     setRoutes(tempRoutes);
   });
+
   return (
     <div className="map-wrap">
       <Box routes={routes} />

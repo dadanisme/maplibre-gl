@@ -17,6 +17,9 @@ export default function Box(props) {
             <li>
               Hit <Badge bg="danger">Delete</Badge> to erase polygon
             </li>
+            <li>
+              Hit <Badge bg="dark">Escape</Badge> to erase all waypoints
+            </li>
           </ul>
         </div>
       ) : (

@@ -301,7 +301,6 @@ export default function Map() {
   });
 
   const handleStartPick = (pick) => {
-    console.log(pick);
     setIsPicking(pick);
   };
 

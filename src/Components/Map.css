@@ -2,13 +2,14 @@
   position: relative;
   width: 100%;
   height: calc(
-    100vh - 77px
+    100vh - 60px
   ); /* calculate height of the screen minus the heading */
+  overflow: hidden;
 }
 
 .map {
   position: absolute;
-  width: calc(100% - 300px);
+  width: 100%;
   height: 100%;
   box-sizing: border-box;
 }

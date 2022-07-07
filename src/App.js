@@ -2,6 +2,7 @@ import Map from "./Components/Map.js";
 import Navbar from "./Components/Navbar.js";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "boxicons/css/boxicons.min.css";
 
 function App() {
   if (window.innerWidth < 768) {

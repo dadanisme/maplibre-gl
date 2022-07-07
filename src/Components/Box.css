@@ -1,7 +1,7 @@
 .result-box {
   position: absolute;
   top: 0;
-  right: 0;
+  right: -300px;
   box-sizing: border-box;
   background-color: #fff;
   width: 300px;

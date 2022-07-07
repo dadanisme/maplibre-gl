@@ -3,35 +3,42 @@ import useKeypress from "react-use-keypress";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./Map.css";
-import Box from "./Box";
-
+import MapOverlays from "./MapOverlays/MapOvelays";
+import Legend from "./Legend/Legend";
+import Sidebar from "./Sidebar/Sidebar";
 export default function Map() {
   // refs
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-  // consts
-  const [lng] = useState(107.59181517109367);
-  const [lat] = useState(-6.862748883983936);
-  const [zoom] = useState(15);
-  const [API_KEY] = useState(process.env.REACT_APP_MAPTILER_API_KEY);
-
   // states
   const [routes, setRoutes] = useState([]);
   const [markers, setMarkers] = useState([]);
+  const [degree, setDegree] = useState(0);
+  const [isPicking, setIsPicking] = useState(false);
+  const [mapState, setMapState] = useState(null);
+  const [isFilled, setIsFilled] = useState(false);
 
   // initialize map
   useEffect(() => {
     if (map.current) return;
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEY}`,
-      center: [lng, lat],
-      zoom: zoom,
+      style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+      center: [107.59181517109367, -6.862748883983936],
+      zoom: 15,
     });
+
+    setMapState(map);
+  }, [isPicking]);
+
+  // handle map after initialization
+  useEffect(() => {
+    if (mapState === null) return;
 
     // handle map click
     map.current.on("click", (e) => {
+      if (!isPicking) return;
       const pointLngLat = [e.lngLat.lng, e.lngLat.lat];
 
       // well, this is absurd, but it works
@@ -79,7 +86,21 @@ export default function Map() {
         return tempRoutes;
       });
     });
-  });
+
+    // add fullscreen control
+    if (
+      document.querySelectorAll(".mapboxgl-ctrl-fullscreen")[0] === undefined
+    ) {
+      map.current.addControl(new maplibregl.FullscreenControl());
+    }
+
+    // handle map rotate
+    map.current.on("rotate", (e) => {
+      // get rotation degree
+      const rotationDegree = e.target.getBearing();
+      setDegree(rotationDegree);
+    });
+  }, [mapState, isPicking]);
 
   // update routes
   const updateRoutes = (arr) => {
@@ -131,7 +152,7 @@ export default function Map() {
           "line-cap": "round",
         },
         paint: {
-          "line-color": "#888",
+          "line-color": "#2D9CDB",
           "line-width": 4,
         },
       });
@@ -179,10 +200,21 @@ export default function Map() {
 
   // handle enter key
   useKeypress("Enter", () => {
+    fill();
+  });
+
+  //handle delete key
+  useKeypress("Delete", () => {
+    removeFill();
+  });
+
+  // fill
+  const fill = () => {
     if (routes.length > 2) {
       if (map.current.getLayer("polygon") !== undefined) {
         map.current.removeLayer("polygon");
         map.current.removeSource("polygon");
+        setIsFilled(false);
       }
 
       map.current.addSource("polygon", {
@@ -210,19 +242,13 @@ export default function Map() {
           "fill-opacity": 0.8,
         },
       });
-    }
-  });
 
-  //handle delete key
-  useKeypress("Delete", () => {
-    if (routes.length > 2) {
-      map.current.removeLayer("polygon");
-      map.current.removeSource("polygon");
+      setIsFilled(true);
     }
-  });
+  };
 
-  // handle escape key
-  useKeypress("Escape", () => {
+  // remove all layers
+  const removeAllLayers = () => {
     for (let i = 1; i <= routes.length; i++) {
       map.current.removeLayer(`point-${i}`);
       map.current.removeSource(`point-${i}`);
@@ -236,13 +262,13 @@ export default function Map() {
     if (map.current.getLayer("polygon") !== undefined) {
       map.current.removeLayer("polygon");
       map.current.removeSource("polygon");
+      setIsFilled(false);
     }
     setRoutes([]);
-  });
+  };
 
-  // handle backspace key
-  useKeypress("Backspace", () => {
-    if (routes.length < 1) return;
+  // do undo
+  const undo = () => {
     map.current.removeLayer(`point-${routes.length}`);
     map.current.removeSource(`point-${routes.length}`);
 
@@ -252,11 +278,47 @@ export default function Map() {
       updatePolygon(tempRoutes);
     }
     setRoutes(tempRoutes);
+  };
+
+  // remove fill
+  const removeFill = () => {
+    if (routes.length > 2) {
+      if (map.current.getLayer("polygon") === undefined) return;
+      map.current.removeLayer("polygon");
+      map.current.removeSource("polygon");
+      setIsFilled(false);
+    }
+  };
+
+  // handle escape key
+  useKeypress("Escape", () => {
+    removeAllLayers();
   });
+
+  // handle backspace key
+  useKeypress("Backspace", () => {
+    undo();
+  });
+
+  const handleStartPick = (pick) => {
+    console.log(pick);
+    setIsPicking(pick);
+  };
 
   return (
     <div className="map-wrap">
-      <Box routes={routes} />
+      <MapOverlays map={map} degree={degree} />
+      <Legend />
+      <Sidebar
+        onStartPick={handleStartPick}
+        isPicking={isPicking}
+        routes={routes}
+        isFilled={isFilled}
+        onUndo={undo}
+        onFill={fill}
+        onClearFill={removeFill}
+        onRemoveLayer={removeAllLayers}
+      />
       <div ref={mapContainer} className="map" />
     </div>
   );

@@ -50,8 +50,17 @@ export default function Sidebar(props) {
           </button>
           {isPicking && (
             <div className="action-buttons">
+              <button className="btn btn-outline-primary">Import</button>
               <button
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-primary"
+                onClick={(e) => {
+                  props.onRemoveLayer();
+                }}
+              >
+                Reset
+              </button>
+              <button
+                className="btn btn-outline-primary"
                 onClick={(e) => {
                   props.onUndo();
                 }}
@@ -59,28 +68,16 @@ export default function Sidebar(props) {
                 Undo
               </button>
               <button
-                className="btn btn-outline-primary"
+                className={
+                  routes.length > 2
+                    ? "btn btn-outline-primary"
+                    : "btn btn-outline-secondary"
+                }
                 onClick={(e) => {
                   props.onFill();
                 }}
               >
-                Fill Shape
-              </button>
-              <button
-                className="btn btn-outline-primary"
-                onClick={(e) => {
-                  props.onClearFill();
-                }}
-              >
-                Clear Fill
-              </button>
-              <button
-                className="btn btn-outline-danger"
-                onClick={(e) => {
-                  props.onRemoveLayer();
-                }}
-              >
-                Remove
+                Close Shape
               </button>
             </div>
           )}
